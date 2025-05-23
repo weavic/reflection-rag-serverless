@@ -40,7 +40,7 @@ flowchart TD
 ### 1. 必要パッケージ
 
     ```bash
-    pip install -r requirements.txt
+    pip install -r infra/requirements.txt
     # sam cli（未インストールなら）
     brew install aws/tap/aws-sam-cli
     ```
