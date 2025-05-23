@@ -18,7 +18,7 @@
 
 ### アーキテクチャ図
 
-:::mermaid
+```mermaid
 flowchart TD
     User["User (curl/HTTP Client)"]
         -->|POST /recall| APIGW["API Gateway"]
@@ -33,17 +33,17 @@ flowchart TD
     classDef ext fill:#e3fcef,stroke:#4d8076,stroke-width:2px;
     classDef aws fill:#fdf6e3,stroke:#d19a66,stroke-width:2px;
     class APIGW,Lambda,BedrockKB,BedrockLLM,S3 aws;
-:::
+```
 
 ## セットアップ & デプロイ手順
 
 ### 1. 必要パッケージ
 
-    ```bash
-    pip install -r infra/requirements.txt
-    # sam cli（未インストールなら）
-    brew install aws/tap/aws-sam-cli
-    ```
+```bash
+pip install -r infra/requirements.txt
+# sam cli（未インストールなら）
+brew install aws/tap/aws-sam-cli
+```
 
 ### 2. AWSリソース準備（初回のみ）
 
@@ -52,14 +52,14 @@ flowchart TD
 
 ### 3. デプロイ
 
-    ```bash
-    sam build
-    sam deploy --guided \
-    --stack-name recall-api-stack \
-    --parameter-overrides \
-        KnowledgeBaseId=<YourKBID> \
-        ModelId=<YourModelID>
-    ```
+```bash
+sam build
+sam deploy --guided \
+--stack-name recall-api-stack \
+--parameter-overrides \
+    KnowledgeBaseId=<YourKBID> \
+    ModelId=<YourModelID>
+```
 
 ### 4. エンドポイント情報取得
 
@@ -69,26 +69,26 @@ flowchart TD
 
 #### API仕様
 
-    ```bash
-    POST https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/recall
-    Content-Type: application/json
-    {
-    "query": "ここ１週間のクライミングのハイライトは？"
-    }
-    ```
+```bash
+POST https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/recall
+Content-Type: application/json
+{
+"query": "ここ１週間のクライミングのハイライトは？"
+}
+```
 
 ##### Request例
 
-    ```bash
-    curl -X POST "https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/recall" \
-    -H "Content-Type: application/json" \
-    -d '{"query": "ここ１週間のクライミングのハイライトは？"}'
-    ```
+```bash
+curl -X POST "https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/recall" \
+-H "Content-Type: application/json" \
+-d '{"query": "ここ１週間のクライミングのハイライトは？"}'
+```
 
 ##### Response例
 
-    ```bash
-    {
-    "summary": "ここ1週間のクライミングのハイライトは以下の通りです: ..."
-    }
-    ```
+```bash
+{
+"summary": "ここ1週間のクライミングのハイライトは以下の通りです: ..."
+}
+```
