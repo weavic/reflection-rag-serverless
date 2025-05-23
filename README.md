@@ -16,7 +16,24 @@
   ↓  
 - **Bedrock LLM**（Claude 3/3.5/Haiku等）
 
----
+### アーキテクチャ図
+
+:::mermaid
+flowchart TD
+    User["User (curl/HTTP Client)"]
+        -->|POST /recall| APIGW["API Gateway"]
+    APIGW --> Lambda["AWS Lambda<br> (lambda_app.py)"]
+    Lambda --> BedrockKB["Bedrock Knowledge Base"]
+    Lambda --> BedrockLLM["Bedrock LLM<br> (Claude/他)"]
+    BedrockKB --> S3["S3 (日記/素材データ)"]
+
+    BedrockLLM -.->|"Summary<br>（要約応答）"| Lambda
+    BedrockKB -.->|"Doc retrieval<br>（検索）"| Lambda
+
+    classDef ext fill:#e3fcef,stroke:#4d8076,stroke-width:2px;
+    classDef aws fill:#fdf6e3,stroke:#d19a66,stroke-width:2px;
+    class APIGW,Lambda,BedrockKB,BedrockLLM,S3 aws;
+:::
 
 ## セットアップ & デプロイ手順
 
