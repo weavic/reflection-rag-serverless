@@ -2,6 +2,7 @@
 
 import os
 import json
+import logging
 from langchain_aws.retrievers.bedrock import AmazonKnowledgeBasesRetriever
 from langchain_aws.chat_models import ChatBedrock
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -9,10 +10,13 @@ from langchain_core.messages import HumanMessage
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.runnable import Runnable
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 KB_ID = os.environ["KB_ID"]
 REGION = os.getenv("AWS_REGION", "ap-northeast-1")
 MODEL_ID = os.getenv("MODEL_ID", "anthropic.claude-v2:1")
-INFERENCE_PROFILE_ARN = os.getenv("INFERENCE_PROFILE_ARN")  # 必要な場合のみ
+INFERENCE_PROFILE_ARN = os.getenv("INFERENCE_PROFILE_ARN")  # Optional
 
 retriever = AmazonKnowledgeBasesRetriever(
     knowledge_base_id=KB_ID,
@@ -50,7 +54,6 @@ def lambda_handler(event, context):
 
     try:
         if "body" in event and isinstance(event["body"], str):
-            # API Gateway経由のときはbodyがJSON文字列になる
             body = json.loads(event["body"])
         else:
             body = event
@@ -63,7 +66,6 @@ def lambda_handler(event, context):
             }
 
         response = chain.invoke(query)
-        # AIMessageなら.content、それ以外ならstr
         summary = response.content if hasattr(response, "content") else response
 
         return {
@@ -72,6 +74,7 @@ def lambda_handler(event, context):
             "body": json.dumps({"summary": summary}),
         }
     except Exception as e:
+        logging.exception("Error occurred in lambda_handler")
         return {
             "statusCode": 500,
             "body": json.dumps({"error": str(e)}),

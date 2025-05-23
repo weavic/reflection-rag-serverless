@@ -6,6 +6,6 @@ s3_prefix = "recall-api-stack"
 region = "ap-northeast-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "KnowledgeBaseId=\"BOHIJSPM7T\" ModelId=\"anthropic.claude-3-haiku-20240307-v1:0\""
+parameter_overrides = "KnowledgeBaseId=\"$KNOWLEDGE_BASE_ID\" ModelId=\"anthropic.claude-3-haiku-20240307-v1:0\""
 image_repositories = []
 disable_rollback = true
