@@ -1,29 +1,24 @@
 #!/usr/bin/env python
-"""Query your personal knowledge base in <60 lines."""
-
 import os
 from langchain_aws.retrievers.bedrock import AmazonKnowledgeBasesRetriever
 from langchain_aws.chat_models import ChatBedrock
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage
+from langchain.schema.runnable import Runnable
 
-# 1) ENV ──────────────────────────────────────────────
-KB_ID = os.environ["KB_ID"]  # e.g. "TSTKBID"
+# 1 ENV ──────────────────────────────────────────────
+KB_ID = os.environ["KB_ID"]
 REGION = os.getenv("AWS_REGION", "ap-northeast-1")
 
-# 2) Components ──────────────────────────────────────
+# 2 Components ──────────────────────────────────────
 retriever = AmazonKnowledgeBasesRetriever(
-    knowledge_base_id=KB_ID,
-    region_name=REGION,
-    embedding_model="cohere.embed-multilingual-v3",
-    search_kwargs={"top_k": 6},
+    knowledge_base_id=KB_ID, region_name=REGION, min_score_confidence=0.5
 )
 
-
 llm = ChatBedrock(
-    model_id="anthropic.claude-3-haiku-20240307-v1:0",
-    region_name="ap-northeast-1",
+    model="anthropic.claude-3-haiku-20240307-v1:0",
+    region="ap-northeast-1",
 )
 
 SYSTEM_TEMPLATE = (
@@ -35,7 +30,8 @@ prompt = ChatPromptTemplate.from_messages(
     [("system", SYSTEM_TEMPLATE), MessagesPlaceholder("context"), ("human", "{input}")]
 )
 
-chain = (
+
+chain: Runnable = (
     {
         "context": retriever
         | (lambda docs: [HumanMessage(content=d.page_content) for d in docs]),
@@ -46,7 +42,7 @@ chain = (
 )
 
 if __name__ == "__main__":
-    import argparse, textwrap, json
+    import argparse, textwrap
 
     p = argparse.ArgumentParser()
     p.add_argument("query", help="例えば『今週のクライミングのハイライトは？』")
