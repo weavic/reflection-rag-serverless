@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  KnowledgeBaseId:
+    Type: String
+    Description: 'Bedrock Knowledge Base Id (KB_ID)'
+  ModelId:
+    Type: String
+    Default: anthropic.claude-v2:1
+    Description: 'Bedrock model id (MODEL_ID)'
+
+Resources:
+  RecallApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_app.lambda_handler
+      Runtime: python3.12
+      MemorySize: 512
+      Timeout: 15
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+      Environment:
+        Variables:
+          KB_ID: !Ref KnowledgeBaseId
+          MODEL_ID: !Ref ModelId
+      Events:
+        RecallApiInvoke:
+          Type: Api
+          Properties:
+            Path: /recall
+            Method: post          
