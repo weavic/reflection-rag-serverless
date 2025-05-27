@@ -53,9 +53,11 @@ pip install -r function_app/requirements.txt
     "AZURE_OPENAI_ENDPOINT": "https://xxxx.openai.azure.com",
     "AZURE_OPENAI_API_KEY": "sk-...",
     "AZURE_OPENAI_DEPLOYMENT": "your-deployment-name",
-    ...
+    "AZURE_SEARCH_ENDPOINT": "https://xxxx.search.windows.net",
+    "AZURE_SEARCH_API_KEY": "qn....",
+    "AZURE_SEARCH_INDEX": "your-index-name"
   }
-}   
+} 
 ```
 
 6. ローカルで起動（HTTPサーバ起動）
@@ -70,10 +72,18 @@ func start
 
 7. curl等で動作確認
 
+* request
+
 ```bash
 curl -X POST "http://localhost:7071/api/function_app" \
 -H "Content-Type: application/json" \
 -d '{"query": "ここ1週間のクライミングのハイライトは？"}'
+```
+
+* response
+  
+```json
+{"summary": "1週間のクライミングのハイライトは、昨日の岩壁での新しい課題に挑戦することでした。その課題は難しかったけれど、最終的にクリアすることができて、自分の成長を感じることができました。"}
 ```
 
 [Azure公式ガイド](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-run-local) 参照

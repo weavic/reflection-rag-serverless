@@ -43,7 +43,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             messages=[
                 {
                     "role": "system",
-                    "content": "ユーザーの記録を振り返って要約してください。",
+                    "content": (
+                        "You are an assistant that helps Hiroki reflect on his daily notes.\n"
+                        "Use the retrieved context to answer the user's question in Japanese."
+                    ),
                 },
                 {"role": "user", "content": f"情報: {context}\n質問: {query}"},
             ],
@@ -51,8 +54,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             max_tokens=400,
         )
 
-        answer = response.choices[0].message["content"]
-        return func.HttpResponse(json.dumps({"summary": answer}), status_code=200)
+        answer = response.choices[0].message.content
+        return func.HttpResponse(
+            json.dumps({"summary": answer}, ensure_ascii=False), status_code=200
+        )
     except Exception as e:
         logging.exception("Function error")
         return func.HttpResponse(str(e), status_code=500)

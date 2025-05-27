@@ -4,6 +4,7 @@
 > RAGとOpenAIを活用した「個人の知識リフレクションAPI」PoC。クラウドストレージに置いたファイルを元に、ブログを自動生成するための振り返りAPI（最小サーバーレス構成）。
 > AWSでは `S3 + KnowledgeBase + Bedrock + Lambda + API Gateway`
 > Azureでは `BlobStorage + AI Search + Azure Functions(Container Apps) + API Management` という構成を取る。
+>  ※本リポジトリはAWS/AzureいずれでもRAG APIのPoC・本番構成に展開可能です。
 
 ---
 
@@ -36,7 +37,7 @@ flowchart TD
     class APIGW,Lambda,BedrockKB,BedrockLLM,S3 aws;
 ```
 
-Azure RAG (Work in Progress)
+Azure RAG
 
 - **API Management or Azure Functions**（HTTPトリガー）
   ↓  
@@ -119,7 +120,7 @@ curl -X POST "https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/rec
 
 ##### Response例
 
-```bash
+```json
 {
 "summary": "ここ1週間のクライミングのハイライトは以下の通りです: ..."
 }
@@ -127,4 +128,17 @@ curl -X POST "https://<api-id>.execute-api.ap-northeast-1.amazonaws.com/Prod/rec
 
 Azure版:
 
-T.B.W.
+### 1. Azureリソース準備（初回のみ）
+
+- Azure Blob Storage（元データ保管用）を作成し、コンテナー名/ストレージ名を控える
+- Azure AI Search（旧Cognitive Search）でIndexを作成し、Index名を控える
+- Azure OpenAIリソースを作成し、デプロイ（Standard）でデプロイ名を控える
+- 必要に応じてAPI ManagementやFunctionsのリソース名やエンドポイントも控えておく
+
+### ローカル動作・セットアップ
+
+Azure Functionsによるローカル開発・起動手順は  
+[infra/azure/Readme.md](infra/azure/Readme.md) に詳しく記載しています。  
+※環境変数やローカル起動、テストのcurl例も掲載
+
+> [Azure公式ガイド](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-run-local) も随時参照してください。
