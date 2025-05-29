@@ -14,7 +14,7 @@ npm i -g azure-functions-core-tools@4 --unsafe-perm true
 2. プロジェクトディレクトリ作成 & 初期化
 
 ```bash
-cd infra/azure     # 適宜、プロジェクト直下 or 作業ディレクトリ
+cd infra/azure/function_app     # 適宜、プロジェクト直下 or 作業ディレクトリ
 func init . --python
 ```
 
@@ -63,8 +63,10 @@ pip install -r function_app/requirements.txt
 6. ローカルで起動（HTTPサーバ起動）
 
 ```bash
+cd ../
 func start
 ```
+infra/azure にて func start
 
 • http://localhost:7071/api/function_app でAPIが立ち上がる
 
@@ -83,7 +85,82 @@ curl -X POST "http://localhost:7071/api/function_app" \
 * response
   
 ```json
-{"summary": "1週間のクライミングのハイライトは、昨日の岩壁での新しい課題に挑戦することでした。その課題は難しかったけれど、最終的にクリアすることができて、自分の成長を感じることができました。"}
+{"summary": "ここ1週間のクライミングのハイライトは、昨日指が回復して高強度の課題であるV7とV8をトライし、V7を2つ落とすことができたことと、V8でも手応えのある進捗を得たことです。", "sources": [{"content": "# 2025-05-28\n\n昨日は、指が回復したので高強度のもの V7, V8 を多くトライ.\nそのうちv7を２つほど落とせ、v8も手応えのある進捗を得た\n", "filename": "2025-05-28.txt", "url": "aHR0cHM6Ly93ZWF2aWN0ZXN0LmJsb2IuY29yZS53aW5kb3dzLm5ldC9yYXcvMjAyNS0wNS0yOC50eHQ", "date": "2025-05-29T03:54:47Z"}]}
 ```
 
+## 参考
+
 [Azure公式ガイド](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-run-local) 参照
+
+### AI Searchでの blobの metadata 取得設定
+
+運用観点で
+Azureの AI Searchのインデックス、インデクサーで、metadata のfileMapping を設定しメタデータを取得できるようにしておく ( edit json )
+
+例(indexers):
+
+```json
+    "fieldMappings": [
+        {
+        "sourceFieldName": "metadata_storage_path",
+        "targetFieldName": "metadata_storage_path",
+        "mappingFunction": {
+            "name": "base64Encode",
+            "parameters": {
+            "useHttpServerUtilityUrlTokenEncode": false
+            }
+        }
+        },
+        {
+        "sourceFieldName": "metadata_storage_name",
+        "targetFieldName": "metadata_storage_name",
+        "mappingFunction": null
+        },
+        {
+        "sourceFieldName": "metadata_storage_last_modified",
+        "targetFieldName": "metadata_storage_last_modified",
+        "mappingFunction": null
+        }
+    ],
+```
+
+例(index)：
+
+```json
+    {
+      "name": "metadata_storage_last_modified",
+      "type": "Edm.DateTimeOffset",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true,
+      "stored": true, <-
+      "sortable": false,
+      "facetable": false,
+      "key": false,
+      "synonymMaps": []
+    },
+    {
+      "name": "metadata_storage_path",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true, <-
+      "stored": true,
+      "sortable": false,
+      "facetable": false,
+      "key": true,
+      "synonymMaps": []
+    },
+    {
+      "name": "metadata_storage_name",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true, <-
+      "stored": true,
+      "sortable": false,
+      "facetable": false,
+      "key": false,
+      "synonymMaps": []
+    },
+```
