@@ -29,7 +29,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             credential=AzureKeyCredential(AZURE_SEARCH_API_KEY),
         )
         results = search_client.search(query, top=3)
-        context = "\n".join([doc["content"] for doc in results if "content" in doc])
+        context = []
+        sources = []
+        for doc in results:
+            if "content" in doc:
+                context.append(doc["content"])
+            sources.append(
+                {
+                    "content": doc.get("content", "Unknown content"),
+                    "filename": doc.get(
+                        "metadata_storage_name", "Unknown filename"
+                    ),  # these metadata are indexed in Azure AI Search(Indexer and index)
+                    "url": doc.get("metadata_storage_path", "metadata_storage_path"),
+                    "date": doc.get("metadata_storage_last_modified", "Unknown date"),
+                }
+            )
+        logging.info(f"Retrieved context: {context}, sources: {sources}")
 
         # Call Azure OpenAI
         client = AzureOpenAI(
@@ -55,8 +70,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         answer = response.choices[0].message.content
+        logging.info(f"Generated answer: {answer}")
         return func.HttpResponse(
-            json.dumps({"summary": answer}, ensure_ascii=False), status_code=200
+            json.dumps({"summary": answer, "sources": sources}, ensure_ascii=False),
+            status_code=200,
         )
     except Exception as e:
         logging.exception("Function error")
