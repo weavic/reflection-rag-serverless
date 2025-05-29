@@ -2,11 +2,15 @@ import logging
 import os
 import json
 import azure.functions as func
-from openai import AzureOpenAI
-from azure.search.documents import SearchClient
-from azure.core.credentials import AzureKeyCredential
+from langchain_community.retrievers.azure_ai_search import AzureAISearchRetriever
+from langchain_openai import AzureChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.schema.runnable import RunnablePassthrough, Runnable
+from langchain_core.messages import HumanMessage
+from langchain_core.utils import secret_from_env
 
 # Environment variables
+AZURE_AI_SEARCH_SERVICE_NAME = os.environ["AZURE_AI_SEARCH_SERVICE_NAME"]
 AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
 AZURE_OPENAI_API_KEY = os.environ["AZURE_OPENAI_API_KEY"]
 AZURE_SEARCH_ENDPOINT = os.environ["AZURE_SEARCH_ENDPOINT"]
@@ -22,55 +26,66 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not query:
             return func.HttpResponse("Query not provided", status_code=400)
 
-        # Retrieve documents from Azure AI Search
-        search_client = SearchClient(
-            endpoint=AZURE_SEARCH_ENDPOINT,
+        # Retrieve documents from Azure AI Search(By LangChain)
+        retriever = AzureAISearchRetriever(
+            service_name=AZURE_AI_SEARCH_SERVICE_NAME,
             index_name=AZURE_SEARCH_INDEX,
-            credential=AzureKeyCredential(AZURE_SEARCH_API_KEY),
+            api_key=AZURE_SEARCH_API_KEY,
+            top_k=3,  # Retrieve top 3 documents
         )
-        results = search_client.search(query, top=3)
-        context = []
-        sources = []
-        for doc in results:
-            if "content" in doc:
-                context.append(doc["content"])
-            sources.append(
-                {
-                    "content": doc.get("content", "Unknown content"),
-                    "filename": doc.get(
-                        "metadata_storage_name", "Unknown filename"
-                    ),  # these metadata are indexed in Azure AI Search(Indexer and index)
-                    "url": doc.get("metadata_storage_path", "metadata_storage_path"),
-                    "date": doc.get("metadata_storage_last_modified", "Unknown date"),
-                }
-            )
-        logging.info(f"Retrieved context: {context}, sources: {sources}")
 
-        # Call Azure OpenAI
-        client = AzureOpenAI(
-            api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        llm = AzureChatOpenAI(
+            api_key=AZURE_OPENAI_API_KEY,  # TODO: Switch to `secret_from_env("AZURE_OPENAI_API_KEY")` for better security when type-checking works
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
             api_version="2024-10-21",
-            azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-        )
-
-        response = client.chat.completions.create(
             model=AZURE_OPENAI_DEPLOYMENT,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an assistant that helps Hiroki reflect on his daily notes.\n"
-                        "Use the retrieved context to answer the user's question in Japanese."
-                    ),
-                },
-                {"role": "user", "content": f"情報: {context}\n質問: {query}"},
-            ],
             temperature=0.7,
             max_tokens=400,
         )
 
-        answer = response.choices[0].message.content
+        SYSTEM_TEMPLATE = (
+            "You are an assistant that helps Hiroki reflect on his daily notes.\n"
+            "Use the retrieved context to answer the user's question in Japanese."
+        )
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", SYSTEM_TEMPLATE),
+                MessagesPlaceholder("context"),
+                ("human", "{input}"),
+            ]
+        )
+
+        chain: Runnable = (
+            {
+                "context": retriever
+                | (lambda docs: [HumanMessage(content=d.page_content) for d in docs]),
+                "input": RunnablePassthrough(),
+            }
+            | prompt
+            | llm
+        )
+        response = chain.invoke(query)
+
+        # Extract sources from retrieved documents
+        docs = retriever.invoke(query)
+        sources = [
+            {
+                "content": doc.page_content,
+                "filename": doc.metadata.get(
+                    "metadata_storage_name", "Unknown filename"
+                ),
+                "url": doc.metadata.get("metadata_storage_path", "Unknown url"),
+                "date": doc.metadata.get(
+                    "metadata_storage_last_modified", "Unknown date"
+                ),
+            }
+            for doc in docs
+        ]
+        answer = response.content if hasattr(response, "content") else response
         logging.info(f"Generated answer: {answer}")
+        logging.info(f"Retrieved context: {docs}, sources: {sources}")
+
         return func.HttpResponse(
             json.dumps({"summary": answer, "sources": sources}, ensure_ascii=False),
             status_code=200,
