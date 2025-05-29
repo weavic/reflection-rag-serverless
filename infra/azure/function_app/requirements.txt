@@ -1,4 +1,7 @@
 openai>1.0.0
 azure-search-documents
-azure-identity
 azure-functions
+langchain>=0.2.0
+langchain-community
+azure-core
+langchain_openai
