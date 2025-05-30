@@ -26,7 +26,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not query:
             return func.HttpResponse("Query not provided", status_code=400)
 
-        # Retrieve documents from Azure AI Search(By LangChain)
+        # Retrieve documents from Azure AI Search
         retriever = AzureAISearchRetriever(
             service_name=AZURE_AI_SEARCH_SERVICE_NAME,
             index_name=AZURE_SEARCH_INDEX,
