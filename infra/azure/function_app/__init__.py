@@ -35,7 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         llm = AzureChatOpenAI(
-            api_key=AZURE_OPENAI_API_KEY,  # TODO: Switch to `secret_from_env("AZURE_OPENAI_API_KEY")` for better security when type-checking works
+            api_key=secret_from_env("AZURE_OPENAI_API_KEY")(),
             azure_endpoint=AZURE_OPENAI_ENDPOINT,
             api_version="2024-10-21",
             model=AZURE_OPENAI_DEPLOYMENT,
