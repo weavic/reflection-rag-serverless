@@ -14,7 +14,7 @@ npm i -g azure-functions-core-tools@4 --unsafe-perm true
 2. プロジェクトディレクトリ作成 & 初期化
 
 ```bash
-cd infra/azure/function_app     # 適宜、プロジェクト直下 or 作業ディレクトリ
+cd infra/azure/
 func init . --python
 ```
 
@@ -63,7 +63,6 @@ pip install -r function_app/requirements.txt
 6. ローカルで起動（HTTPサーバ起動）
 
 ```bash
-cd ../
 func start
 ```
 infra/azure にて func start
@@ -88,6 +87,42 @@ curl -X POST "http://localhost:7071/api/function_app" \
 {"summary": "ここ1週間のクライミングのハイライトは、昨日指が回復して高強度の課題であるV7とV8をトライし、V7を2つ落とすことができたことと、V8でも手応えのある進捗を得たことです。", "sources": [{"content": "# 2025-05-28\n\n昨日は、指が回復したので高強度のもの V7, V8 を多くトライ.\nそのうちv7を２つほど落とせ、v8も手応えのある進捗を得た\n", "filename": "2025-05-28.txt", "url": "aHR0cHM6Ly93ZWF2aWN0ZXN0LmJsb2IuY29yZS53aW5kb3dzLm5ldC9yYXcvMjAyNS0wNS0yOC50eHQ", "date": "2025-05-29T03:54:47Z"}]}
 ```
 
+※ source返しが確認できる
+
+8. ディプロイを行い、本番環境で確認する
+
+ディプロイを行う
+
+```bash
+ func azure functionapp publish <your-app-name> 
+```
+
+* （初回のみ）環境変数を設定する : [Settings] -> [Environment variables]
+  
+<img src="../../assets/Azure-functionapp-env.png " alt="Azure Function App Env example" width="50%" />
+
+※ 本番環境ではローカルと異なり、local_setting.jsonには記載しない（アップロードもしない）
+  
+curlで確認を行う
+
+* request
+
+```bash
+curl -X POST "https://<your-app-name>.azurewebsites.net/api/function_app?code=<your-function-key>" \
+                -H "Content-Type: application/json" \
+                -d '{"query": "ここ1週間のクライミングのハイライトは？"}'
+```
+
+  ※ code には、azure portalにある keyを指定する（下記）: [Functions] -> [App keys]
+
+<img src="../../assets/Azure-functionapp-keys.png" alt="Azure Function App Key example" width="50%" />
+
+* response
+
+```json
+{"summary": "昨日のクライミングセッションで、指が回復したことで高強度の課題であるV7とV8を多くトライしました。V7を２つほどクリアでき、V8でも手応えを感じる進歩がありました。", "sources": [{"content": "# 2025-05-28\n\n昨日は、指が回復したので高強度のもの V7, V8 を多くトライ.\nそのうちv7を２つほど落とせ、v8も手応えのある進捗を得た\n", "filename": "2025-05-28.txt", "url": "aHR0cHM6Ly93ZWF2aWN0ZXN0LmJsb2IuY29yZS53aW5kb3dzLm5ldC9yYXcvMjAyNS0wNS0yOC50eHQ", "date": "2025-05-29T03:54:47Z"}]}
+```
+ 
 ## 参考
 
 [Azure公式ガイド](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-run-local) 参照
