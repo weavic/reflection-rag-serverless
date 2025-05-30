@@ -13,6 +13,11 @@ from langchain_community.retrievers.azure_ai_search import AzureAISearchRetrieve
 from langchain_openai import AzureChatOpenAI
 from langchain_core.utils import secret_from_env
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 # 1 ENV ──────────────────────────────────────────────
 # for AWS Lambda, set the environment variables in the Lambda console or via SAM/CloudFormation
 KB_ID = os.environ["KB_ID"]
