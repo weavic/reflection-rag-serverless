@@ -59,7 +59,7 @@ def handle_query(request):
         # Uncomment the following lines to use Vertex AI with a service account
         # 404 error may occur if the model is not available in the specified location
         # {
-        #   "error": "Failed to generate response: 404 Publisher Model projects/website-283612/locations/us-central1/publishers/google/models/gemini-1.5-pro-001 was not found or your project does not have access to it. Please ensure you are using a valid model version. For more information, see: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versions"
+        #   "error": "Failed to generate response: 404 Publisher Model projects/<YOUR PROJECT ID>/locations/<LOCATION ID>/publishers/google/models/gemini-1.5-pro-001 was not found or your project does not have access to it. Please ensure you are using a valid model version. For more information, see: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versions"
         # }
         # llm = ChatVertexAI(
         #     model=MODEL_NAME,
