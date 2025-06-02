@@ -1,0 +1,13 @@
+flask
+functions-framework
+langchain
+langchain-community
+langchain-google-vertexai
+#langchain-google-community
+google-cloud-aiplatform==1.95.1
+google-auth
+python-dotenv
+google-cloud-discoveryengine
+langchain_google_genai
+requests
+types-requests
